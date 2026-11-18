@@ -1,0 +1,5 @@
+601f2fe5ffdca168347df45941af520fa69aafd65ad685dff5c9306af49eccc7  RG34XXSP-Andr36oid-Android11-v45-perf-complete.img.gz
+c6b07602b9af30911b285242984ea886fe46df5286089faa03f09cffc3fb2535  RG34XXSP-Andr36oid-Android11-v45-perf-complete.img
+57ec6e4cc00c1fbc33a1bd59b91cfd4daf0198998968ab2da04481758b1b753a  v45-perf-partitions/RG34XXSP-v45-system.img
+d5ec5301b788e583fe2b53bf7bedc3b59d1b7d66e1ca94510e31e0e123d419ac  v45-perf-partitions/RG34XXSP-v45-vendor.img
+6d84cd5708723587406838e934b5f1b3fc58fab7489c235b5a3e1bb3959191a6  v45-perf-partitions/RG34XXSP-v45-product.img

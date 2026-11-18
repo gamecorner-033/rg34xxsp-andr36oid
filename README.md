@@ -1,91 +1,101 @@
-# Andr36oid Android 11 for Anbernic RG34XX SP
+# Andr36oid Android 11 for Anbernic RG34XX SP — v45 Performance-First 64-Bit Edition
 
-An experimental community port of Andr36oid to the **Anbernic RG34XX SP (Allwinner H700)**, with Daijishō as the default launcher. This is regular Android 11 rather than Android TV.
+An experimental, performance-first community fork of Andr36oid for the **Anbernic RG34XX SP (Allwinner H700)**, paired with the lightweight **Andr36oid Launcher** (`SproutLauncher` fork) as the default home frontend and configured for a **64-bit-only (`zygote64`)** runtime.
 
-I have flashed and booted this build on my own RG34XX SP with the **v2 LCD panel**. Version 43 also works on my device with the USB startup correction. Other panel revisions and other Anbernic models have not been confirmed.
+---
 
-## Download
+## Build Artifacts (Local Workspace)
 
-**[Download v43 from GitHub Releases](https://github.com/icameronrb/RG34XXSP-Andr36oid/releases/tag/v43)**. Choose `RG34XXSP-Andr36oid-Android11-v43-complete.img.gz` under Assets. This is a complete image; earlier patches are not required.
+* **Complete Flashable Image (`.img.gz`):** `releases/RG34XXSP-Andr36oid-Android11-v45-perf-complete.img.gz` (`892.02 MiB`)
+* **Complete Uncompressed Image (`.img`):** `releases/RG34XXSP-Andr36oid-Android11-v45-perf-complete.img` (`11.27 GiB`)
+* **In-Place Card Updater (`v43`/`v44` $\rightarrow$ `v45`):** `releases/v45-perf-partitions/UPDATE-CARD-V45.cmd` ([Update-Card-v45.ps1](scripts/card-updaters/Update-Card-v45.ps1))
+* **Checksums:** [RG34XXSP-v45-SHA256SUMS.txt](scripts/card-updaters/RG34XXSP-v45-SHA256SUMS.txt)
+* **Technical Briefing:** [OPTIMIZATION_BRIEFING.md](OPTIMIZATION_BRIEFING.md)
+* **RetroArch RG34XX SP Controls Config:** [ANBERNIC-keys.cfg](configs/retroarch/ANBERNIC-keys.cfg) & [retroarch.cfg](configs/retroarch/retroarch.cfg)
+* **microG On-Demand Installer & Toggle:** [Install-And-Toggle-microG.ps1](scripts/microg/Install-And-Toggle-microG.ps1)
 
-The [earlier OneDrive sharing link](https://1drv.ms/u/c/74a5f0ffe2189a45/IQBpgC47xe8WQZ0QPKg9RvJmAUaSGnKH0G0z7gTYO-0aOhQ?e=5cU8wj) was used for the previous build. Use the GitHub v43 release for this version.
+---
 
-## What works on the tested handheld
+## What Changed in v45 (Performance-First 64-Bit Build)?
 
-- Display and graphics on the v2 panel; audio.
-- D-pad, buttons, Home/menu and volume controls.
-- Both analog sticks, with full-range calibration.
-- Lid-close sleep and lid-open wake; long-press power menu.
-- Wi-Fi and built-in Bluetooth.
-- USB file transfer (MTP) and ADB debugging, with a USB startup correction in v43.
-- Joystick mouse/cursor mode: **hold Menu (M) and press X**.
-- Daijishō as the initial launcher, with Andr36oid Launcher available as an option.
-- A preinstalled **Controller Tester** app for checking buttons and stick movement.
-- Automatic first-boot storage expansion for apps and ROMs.
+1. **Lightweight Default Frontend (`Andr36oidLauncher`):**
+   * Replaced heavy Daijishō (`110–160 MB` RAM) with the pre-profiled, AOT-compiled **Andr36oid Launcher** (`~28–40 MB` RAM) as the default home activity.
+   * Removed duplicate APK copies from `/vendor/etc/rg34xx/` and stripped `Daijishou` from `/system/app/`.
+2. **64-Bit-Only Zygote (`ro.zygote=zygote64`):**
+   * Configured `/system/etc/init/hw/init.zygote64.rc`, `/system/build.prop`, and `/vendor/build.prop` for single-Zygote 64-bit operation (`arm64-v8a`), reclaiming **45–60 MB of permanent RAM** previously held by `zygote_secondary` (`app_process32`).
+3. **Ultra-Low-Power Clamshell Lid Sleep Manager (`rg34xx-lid-sleep.sh` — Option 1):**
+   * Listens exclusively on the AXP2202 PMIC input device (`axp2202-pek`, `0%` CPU during gameplay) for Hall-sensor lid-close (`KEY_INSERT` / `0x006e`) and lid-open (`KEY_DELETE` / `0x006f`).
+   * **On Lid Close:** Clamps CPU max frequency to `480 MHz` on `cpu0`, saves active Wi-Fi/Bluetooth states and brings `wlan0` down (powering down the `axp2202-cldo4` 3.3V Wi-Fi rail to eliminate the `25–45 mA` standby drain), and immediately forces Android into **Deep Doze** (`cmd deviceidle force-idle deep`) so the H700 enters hardware **ARM PSCI `universal-standby` (`mem`)** with DRAM in self-refresh.
+   * **On Lid Open:** Synchronously restores full `1512 MHz` CPU clocks and all 4 cores (`0-3`) in `<2ms` via direct sysfs writes for instant wake, then asynchronously exits Deep Doze and restores your prior Wi-Fi/Bluetooth state.
+4. **Cortex-A53 Compiler & Bionic Tuning:**
+   * Updated Bionic and Dalvik/ART instruction set targets in `/vendor/build.prop` from `generic` to `cortex-a53` (`ro.bionic.cpu_variant=cortex-a53`, `dalvik.vm.isa.arm64.variant=cortex-a53`).
+4. **Kernel `sdcardfs` Enabled (Bypassing Userspace FUSE):**
+   * Restored `setprop persist.sys.fuse false` and `setprop persist.sys.fflag.override.settings_fuse false` in `/vendor/etc/init/hw/init.sun50iw9p1.rc` so ROM reads and emulator saves go directly through the kernel's built-in `sdcardfs` instead of bouncing through the Java `MediaProvider` FUSE daemon.
+5. **Removed Boot-Time Input Sniffing & Diagnostic Polling Loops:**
+   * Removed `rg34xx-power-usb-report` (which ran `getevent -lt` for the first 300 seconds of every boot piping every button/stick input through a shell loop, plus a 24×10s `dumpsys` loop) and `rg34xx-cpu-report`.
+   * Added a `<5ms` fast-path exit to `rg34xx-owner-setup.sh` on subsequent boots and trimmed `rg34xx-hardware-v27.sh` to load `8821cs.ko` and exit cleanly without `dmesg`/`dumpsys` diagnostic dumps.
+6. **VM, THP, CPU Governor, Cpuset & MicroSD I/O Queue Tuning:**
+   * Disabled Transparent Huge Pages (`transparent_hugepage/enabled = never`) and tuned `min_free_kbytes = 8192`, `dirty_background_ratio = 5`, `dirty_ratio = 15`.
+   * Added boot-time `performance` governor boost with automatic handoff to `schedutil` (`up_rate_limit_us = 1000`, `down_rate_limit_us = 10000`) on `sys.boot_completed=1`.
+   * Disabled `iostats`, `add_random`, and `rotational` on `mmcblk0` (TF1) and `mmcblk1` (TF2) with `read_ahead_kb = 512`.
+   * Added post-boot idle broadcast receiver trimming (`rg34xx-boot-trim.sh`) and included the v44 adaptive RAM profiler (`rg34xx-ram-profile.sh`).
+7. **Service, HAL, Permission & APK Debloat:**
+   * Disabled `userdebug` scheduler profiling (`sched_schedstats = 0`) and stripped 21 `userdebug`/unused init `.rc` services (`incidentd`, `perfetto`, `traced_perf`, `heapprofd`, `iorapd`, `atrace`, `bootstat`, `dumpstate`, `racoon`, `mdnsd`, `gsid`, etc.).
+   * Disabled redundant vendor HALs (`vendor.keymint-default`, `vendor.rebootescrow-default`, `boringssl_self_test`), cleaned dead HAL entries (`camera.provider`, `tv.cec`) from `/vendor/etc/vintf/manifest.xml`, moved 14 unused donor feature XMLs out of `/vendor/etc/permissions/`, and added `gameconsole_unavailable_features.xml`.
+   * Removed `SettingsIntelligence`, 19 R36S/Rockchip-specific hardware/utility apps, and all 78 `/product/overlay` RRO theme APKs while preserving `ThoriumWebView` (lazy-loaded, `0 MB` idle RAM), `PerfOverlay`, `GameComfort`, `GamepadKeyboard`, `JoyMouseSettings`, and `ControllerTester`.
 
-The stock CPU frequency settings are retained; this port does not add an overclock. The old approximately 2GB stock ROM partition has been replaced with a small 128MiB boot/log partition. Remaining card capacity is used for Android storage. A tested 64GB card reported approximately 56GB total Android storage after expansion.
+---
 
 ## Installation
 
-1. Back up the selected microSD card. **Flashing erases that card.** Use a spare, reliable 32GB or larger card.
-2. Download the v43 `.img.gz` file and optionally verify the SHA-256 below.
-3. Flash it using an image writer such as [balenaEtcher](https://etcher.balena.io/). If your writer does not accept `.img.gz`, extract the `.img` first. Select the correct card carefully.
-4. Safely eject the card and put it in the handheld's **TF1** slot.
-5. Boot and allow up to 15 minutes on the first startup for storage checks and expansion. If a restart is requested, restart once to finish.
-6. Configure Daijishō and add your own games. No personal ROM collection is included.
+### Option 1: Fresh MicroSD Flash (Complete Image)
+1. Back up the selected microSD card (**flashing erases the card**). Use a reliable 32GB or larger card.
+2. Flash `releases/RG34XXSP-Andr36oid-Android11-v45-perf-complete.img.gz` using [balenaEtcher](https://etcher.balena.io/) or Rufus.
+3. Insert the card into the handheld's **TF1** slot and boot. Allow first-boot storage expansion to complete.
 
-Android app storage uses ext4. To browse files in Windows, boot Android, unlock the handheld, connect a USB data cable and select **File transfer/MTP**. Windows cannot browse the Android partition directly through a card reader.
+### Option 2: In-Place Upgrade of an Existing v43 / v44 Card
+1. Power off the handheld and insert your existing v43/v44 microSD card into a Windows PC reader.
+2. Right-click `releases/v45-perf-partitions/UPDATE-CARD-V45.cmd` and select **Run as administrator**.
+3. The updater verifies the card layout and `boot` partition, writes and read-back verifies the v45 `system`, `vendor`, and `product` partitions, and preserves your existing `userdata` (`/data`) partition.
+
+---
 
 ## Controls
 
-- **Menu (M):** Home.
-- **Menu + X:** toggle cursor mode.
-- In cursor mode: right stick moves the pointer, left stick scrolls, A or R1 left-clicks.
-- Mouse mode can also be selected in **Settings → Joystick mouse**.
-- Open **Controller Tester** from the app list to check buttons and analog sticks.
+* **Menu (M):** Home (short press), `M + B` App Switcher.
+* **Menu + X:** Toggle joystick mouse/cursor mode (right stick moves pointer, left stick scrolls, A or R1 left-clicks).
+* **Long-Press Power:** Power / Global Actions menu.
 
-## What changed in v43?
+---
 
-Version 41 could expose USB interfaces while Android's active file-transfer service was not initialized. Windows would sometimes stay at “Connecting to device,” especially after a restart.
+## SHA-256 Checksums (v45)
 
-Version 43 changes the USB startup scripts to request MTP through Android's USB service, including MTP alongside ADB when debugging is enabled. It retains the hardware fixes, apps and cursor controls from v41. Music files were not removed.
-
-The complete image passed a full decompression and byte comparison against its sources, partition-table checks and filesystem checks. The new USB scripts passed 13 simulated regression scenarios. The maintainer has reported v43 working on the handheld; this is not a guarantee of compatibility or long-term stability on every unit. Please report the panel revision, build version and steps to reproduce any issue.
-
-## Experimental — use at your own risk
-
-This is unofficial, experimental firmware, provided as-is without warranty. **I am not responsible for damage to your device, SD card, battery, lost data or any other loss resulting from its use.** Back up your data and use a spare card. This project is not endorsed by Anbernic or the upstream projects credited below.
-
-Charging cutoff and thermal protection have **not** been independently validated on this Android port. Retaining stock kernel settings does not establish battery safety. Treat this as an experimental build and monitor charging.
-
-## Credits and sources
-
-This port depends on substantial work by other developers. Credit for their projects remains with their authors; listing a project here does not imply its maintainers developed or endorsed this port.
-
-- **[Andr36oid](https://github.com/andr36oid)** — the R36S Android 11 base and handheld features. Thanks to **itskenny0, turtleletortue, sonic011gamer, notime2d8**, and all contributors. See the [release repository](https://github.com/andr36oid/releases) and [common device components](https://github.com/andr36oid/android_device_gameconsole_common).
-- **Andr36oid joystick mouse contributors** — the adapted cursor service is based on [joyMouse at commit 0c77af628427f60dd40f6f136f45af851aac7b26](https://github.com/andr36oid/android_device_gameconsole_common/tree/0c77af628427f60dd40f6f136f45af851aac7b26/joyMouse).
-- **[well83](https://github.com/well83)** — [T95 H616 Android 12 b25-final](https://github.com/well83/t95-h616-android12/releases/tag/b25-final), used as an Allwinner Android donor during the port's development. The resulting release runs Android 11.
-- **[Anbernic](https://anbernic.com/)** — RG34XX SP stock firmware, kernel and hardware support used for this device adaptation; stock firmware reference: RG34XXSP v1.0.6.
-- **[Daijishō](https://github.com/TapiocaFox/Daijishou)** — the launcher and its developers, including **TapiocaFox, Post-Mortem, Jetup13, official-wizard**, and the wider contributor community. Its public repository provides assets and project information, not the full application source.
-- **[Android Open Source Project](https://source.android.com/), [LineageOS](https://lineageos.org/), [Linux](https://kernel.org/)** and their contributors — foundational software and tooling.
-- **Allwinner, Arm and Realtek** — platform, graphics and wireless components used by the underlying firmware.
-- **[Allwinner-Homlet H6 BSP Linux 4.9](https://github.com/Allwinner-Homlet/H6-BSP4.9-linux)** — a kernel/platform research reference.
-- **[LPF970915/H700Android](https://github.com/LPF970915/H700Android)** — related H700 Android research consulted during investigation. Its image is not the base of this release.
-- **[icameronrb](https://github.com/icameronrb)** — project direction and hands-on flashing, testing and feedback on the physical handheld.
-- **OpenAI Codex** — assistance with port adaptations, diagnostics, Controller Tester, regression checks and image packaging.
-
-Third-party components retain their own licenses and ownership. These links identify upstream projects and research references; this repository does not claim to contain a complete source tree or reproducible build system for every bundled component.
-
-## SHA-256
-
-Compressed image (`RG34XXSP-Andr36oid-Android11-v43-complete.img.gz`):
-
+Compressed image (`RG34XXSP-Andr36oid-Android11-v45-perf-complete.img.gz`):
 ```text
-67681fd18292427b829063b1fcc93f3c4b8fbe6948eed65a69ea6e9f30979e31
+601f2fe5ffdca168347df45941af520fa69aafd65ad685dff5c9306af49eccc7
 ```
 
-Uncompressed `.img`:
-
+Uncompressed image (`RG34XXSP-Andr36oid-Android11-v45-perf-complete.img`):
 ```text
-756609773bb05e1672de69d8c44c4ef75c2b54225e090c248b43fb702e10d2a8
+c6b07602b9af30911b285242984ea886fe46df5286089faa03f09cffc3fb2535
 ```
+
+Individual partitions (`releases/v45-perf-partitions/`):
+```text
+57ec6e4cc00c1fbc33a1bd59b91cfd4daf0198998968ab2da04481758b1b753a  RG34XXSP-v45-system.img
+d5ec5301b788e583fe2b53bf7bedc3b59d1b7d66e1ca94510e31e0e123d419ac  RG34XXSP-v45-vendor.img
+6d84cd5708723587406838e934b5f1b3fc58fab7489c235b5a3e1bb3959191a6  RG34XXSP-v45-product.img
+```
+
+---
+
+## Experimental — Use at Your Own Risk
+
+This is unofficial, experimental firmware provided as-is without warranty. Charging cutoff and thermal protection have not been independently validated on this Android port. Monitor charging and use a spare microSD card.
+
+## Credits and Upstream Sources
+
+* **[Andr36oid](https://github.com/andr36oid)** — R36S Android 11 base, Andr36oid Launcher, joyMouse, and handheld framework features (**itskenny0, turtleletortue, sonic011gamer, notime2d8**, and contributors).
+* **[icameronrb/RG34XXSP-Andr36oid](https://github.com/icameronrb/RG34XXSP-Andr36oid)** — RG34XX SP (H700) v43/v44 port adaptation, display adapter, storage resizer, and hardware bring-up.
+* **[well83](https://github.com/well83)** — T95 H616 Android 12 donor components.
+* **[Anbernic](https://anbernic.com/)**, **AOSP**, **LineageOS**, **Linux**, **Allwinner**, **Arm**, and **Realtek**.

@@ -1,0 +1,18 @@
+{
+  "version": 45,
+  "variant": "perf-64bit-andr36oidlauncher",
+  "boot_sha256": "0cd8764b1ad25be7a8e0d78417bd483ffd7902106e337b047858e6d1ab2e229e",
+  "system_sha256": "57ec6e4cc00c1fbc33a1bd59b91cfd4daf0198998968ab2da04481758b1b753a",
+  "vendor_sha256": "d5ec5301b788e583fe2b53bf7bedc3b59d1b7d66e1ca94510e31e0e123d419ac",
+  "product_sha256": "6d84cd5708723587406838e934b5f1b3fc58fab7489c235b5a3e1bb3959191a6",
+  "system_offset": 289406976,
+  "system_bytes": 2147483648,
+  "vendor_offset": 2436890624,
+  "vendor_bytes": 536870912,
+  "product_offset": 2973761536,
+  "product_bytes": 536870912,
+  "uncompressed_img_bytes": 12101615616,
+  "uncompressed_img_sha256": "c6b07602b9af30911b285242984ea886fe46df5286089faa03f09cffc3fb2535",
+  "compressed_img_bytes": 935352902,
+  "compressed_img_sha256": "601f2fe5ffdca168347df45941af520fa69aafd65ad685dff5c9306af49eccc7"
+}
