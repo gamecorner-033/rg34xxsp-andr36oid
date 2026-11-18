@@ -3,7 +3,7 @@ import hashlib
 import json
 import os
 
-base_dir = r"G:\rg34xxsp-andr36oid"
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 v43_gz = os.path.join(base_dir, "releases", "RG34XXSP-Andr36oid-Android11-v43-complete.img.gz")
 v43_parts = os.path.join(base_dir, "releases", "v43-partitions")
 v45_parts = os.path.join(base_dir, "releases", "v45-perf-partitions")

@@ -17,13 +17,13 @@ if (-not (Test-Path $Adb)) {
 $devs = & $Adb devices | Select-String "\s+device$"
 if (-not $Device) {
     if ($devs.Count -eq 0) {
-        & $Adb connect 192.168.2.119:5555 | Out-Null
-        $devs = & $Adb devices | Select-String "\s+device$"
-    }
-    if ($devs.Count -eq 0) {
-        throw "No connected RG34XX SP found over USB or Wireless Debugging (192.168.2.119:5555)."
+        throw "No connected RG34XX SP found over USB or Wireless ADB. Connect via USB or pass -Device <ip:port>."
     }
     $Device = ($devs[0].Line -split "\s+")[0]
+} elseif ($Device -match "^\d+\.\d+\.\d+\.\d+(:\d+)?$") {
+    $target = if ($Device -match ":") { $Device } else { "${Device}:5555" }
+    & $Adb connect $target | Out-Null
+    $Device = $target
 }
 
 Write-Host "Using device: $Device" -ForegroundColor Cyan

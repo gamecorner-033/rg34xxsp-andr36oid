@@ -1,7 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-OUT_DIR="/mnt/g/rg34xxsp-andr36oid/releases/v45-perf-partitions"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+OUT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)/releases/v45-perf-partitions"
 MNT="/tmp/rg34xx_v45_verify"
 rm -rf "$MNT"
 mkdir -p "$MNT/system" "$MNT/vendor" "$MNT/product"

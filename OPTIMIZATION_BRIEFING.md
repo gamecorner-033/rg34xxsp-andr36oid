@@ -242,7 +242,7 @@ These apps were built for the R36S (`rk3326` + `odroidgo3-joypad`) and try to re
 
 ## 5. Completed v45 Build & Verification Results
 
-All recommended optimizations (`Andr36oidLauncher` default frontend, 64-bit-only `zygote64`, Option 1 `rg34xx-lid-sleep.sh` Clamshell Deep-Sleep + Radio Cut Manager, Cortex-A53 targets, kernel `sdcardfs`, VM/THP/MMC queue tuning, removal of input-sniffing/diagnostic loops, and full service/HAL/APK/overlay debloating while preserving lazy-loaded `ThoriumWebView`) have been built and verified in `G:\rg34xxsp-andr36oid`:
+All recommended optimizations (`Andr36oidLauncher` default frontend, 64-bit-only `zygote64`, Option 1 `rg34xx-lid-sleep.sh` Clamshell Deep-Sleep + Radio Cut Manager, Cortex-A53 targets, kernel `sdcardfs`, VM/THP/MMC queue tuning, removal of input-sniffing/diagnostic loops, and full service/HAL/APK/overlay debloating while preserving lazy-loaded `ThoriumWebView`) have been built and verified in this repository:
 
 | Output Artifact | Size | SHA-256 Checksum | Verification |
 | :--- | :--- | :--- | :--- |
@@ -253,9 +253,9 @@ All recommended optimizations (`Andr36oidLauncher` default frontend, 64-bit-only
 | `releases/v45-perf-partitions/RG34XXSP-v45-product.img` | `512 MiB` (`176 MiB` free, `62%` used) | `6d84cd5708723587406838e934b5f1b3fc58fab7489c235b5a3e1bb3959191a6` | `e2fsck -f -n` + SELinux verified |
 
 ### Build & Verification Scripts
-* [build_v45_partitions.sh](file:///G:/rg34xxsp-andr36oid/scripts/build_v45_partitions.sh)
-* [verify_and_zerofill_v45.sh](file:///G:/rg34xxsp-andr36oid/scripts/verify_and_zerofill_v45.sh)
-* [assemble_complete_image.py](file:///G:/rg34xxsp-andr36oid/scripts/assemble_complete_image.py)
-* [compress_and_verify_image.py](file:///G:/rg34xxsp-andr36oid/scripts/compress_and_verify_image.py)
-* [Update-Card-v45.ps1](file:///G:/rg34xxsp-andr36oid/releases/v45-perf-partitions/Update-Card-v45.ps1) & [UPDATE-CARD-V45.cmd](file:///G:/rg34xxsp-andr36oid/releases/v45-perf-partitions/UPDATE-CARD-V45.cmd)
-* [RG34XXSP-v45-SHA256SUMS.txt](file:///G:/rg34xxsp-andr36oid/releases/RG34XXSP-v45-SHA256SUMS.txt)
+* [build_v45_partitions.sh](scripts/build_v45_partitions.sh)
+* [verify_and_zerofill_v45.sh](scripts/verify_and_zerofill_v45.sh)
+* [assemble_complete_image.py](scripts/assemble_complete_image.py)
+* [compress_and_verify_image.py](scripts/compress_and_verify_image.py)
+* [Update-Card-v45.ps1](scripts/card-updaters/Update-Card-v45.ps1) & [UPDATE-CARD-V45.cmd](scripts/card-updaters/UPDATE-CARD-V45.cmd)
+* [RG34XXSP-v45-SHA256SUMS.txt](scripts/card-updaters/RG34XXSP-v45-SHA256SUMS.txt)

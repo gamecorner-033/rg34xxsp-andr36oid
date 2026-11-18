@@ -1,7 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-BASE_DIR="/mnt/g/rg34xxsp-andr36oid"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 V43_PARTS="$BASE_DIR/releases/v43-partitions"
 V44_VENDOR="$BASE_DIR/releases/v44-adaptive-ram-test/RG34XXSP-v44-adaptive-ram-test/RG34XXSP-v44-vendor.img"
 OUT_DIR="$BASE_DIR/releases/v45-perf-partitions"
