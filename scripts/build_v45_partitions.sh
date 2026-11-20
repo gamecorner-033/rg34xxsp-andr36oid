@@ -122,6 +122,8 @@ on post-fs-data
     setprop persist.sys.fflag.override.settings_fuse false
     # Bound RAM profiling before zygote starts; defaults survive failure.
     exec u:r:shell:s0 root root -- /system/bin/timeout 10 /system/bin/sh /vendor/bin/rg34xx-ram-profile.sh
+    # Start framework ashmem HIDL allocator required by Allwinner OMX hardware decoder & Codec2 (upstream V48)
+    start rg34xx-hidl-memory
     setprop vold.post_fs_data_done 1
 
 on boot
@@ -134,6 +136,10 @@ on boot
     write /proc/sys/kernel/timer_migration 0
     write /sys/kernel/debug/tracing/tracing_on 0
     write /sys/kernel/tracing/tracing_on 0
+    # Prevent Allwinner H700 un-wakeable mem suspend while keeping screen-off + 480MHz + radio-cut sleep
+    write /sys/power/wake_lock rg34xx_no_mem_suspend
+    # Keep wireless ADB TCP port 5555 enabled across reboots
+    setprop service.adb.tcp.port 5555
 
     # MicroSD (TF1 & TF2) queue optimization
     write /sys/block/mmcblk0/queue/iostats 0
@@ -189,6 +195,16 @@ service rg34xx-boot-trim /system/bin/sh /vendor/bin/rg34xx-boot-trim.sh
     disabled
     oneshot
 
+# Framework ashmem allocator required by OMX native-buffer setup and Codec2 (merged from upstream V48).
+# The system service binary and framework VINTF declaration already exist.
+service rg34xx-hidl-memory /system/bin/hw/android.hidl.allocator@1.0-service
+    class hal
+    user system
+    group system
+    interface android.hidl.allocator@1.0::IAllocator ashmem
+    seclabel u:r:hal_allocator_default:s0
+    disabled
+
 # Event-driven Lid Sleep Power Manager (Option 1: Instant Deep Doze + Radio Cut + 480MHz clamp)
 service rg34xx-lid-sleep /system/bin/sh /vendor/bin/rg34xx-lid-sleep.sh
     class late_start
@@ -201,6 +217,7 @@ on property:sys.boot_completed=1
     write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor schedutil
     write /sys/devices/system/cpu/cpufreq/policy0/schedutil/up_rate_limit_us 1000
     write /sys/devices/system/cpu/cpufreq/policy0/schedutil/down_rate_limit_us 10000
+    start rg34xx-hidl-memory
     start joyMouse
     start rg34xx-lid-sleep
     start rg34xx-boot-trim
@@ -528,6 +545,7 @@ set_selinux "u:object_r:vendor_file:s0" "$V/bin/rg34xx-hardware-v27.sh"
 # IPower/default, Wi-Fi, Bluetooth, and Lights!
 for rc in \
     android.hardware.camera.provider@2.4-external-service.rc.disabled \
+    android.hardware.security.keymint-service.rc \
     rild.rc.disabled \
     radio_monitor.rc.disabled \
     env.librild.rc.disabled \

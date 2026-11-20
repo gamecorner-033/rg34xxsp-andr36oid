@@ -16,7 +16,13 @@ An experimental, performance-first community fork of Andr36oid for the **Anberni
 
 ---
 
-## What Changed in v45 (Performance-First 64-Bit Build)?
+## Hardware Video Decoding Fix (Merged from Upstream V48)
+
+This build merges the upstream **[V48 video-playback fix](https://github.com/icameronrb/RG34XXSP-Andr36oid/releases/tag/v48-video-patch)** directly into the v45 `vendor` partition (`init.sun50iw9p1.rc`), automatically starting the framework `android.hidl.allocator@1.0::IAllocator/ashmem` (`rg34xx-hidl-memory`) service with its intended `u:r:hal_allocator_default:s0` SELinux domain and HIDL interface registration. This resolves hardware `OMX.allwinner.video.decoder.avc` / `Codec2` buffer allocation hangs across video apps (Moonlight, YouTube, VLC, etc.) without forcing software decoding.
+
+*Note: Upstream's standalone `patches/v48/` updater (`RG34XXSP-v48-video-playback-fix-after-v43.zip`) is included in this repository for stock **v43** cards only and rejects v44/v45 builds. Users on this v45 performance fork should use `scripts/card-updaters/UPDATE-VENDOR-ONLY.cmd` or `UPDATE-CARD-V45.cmd`.*
+
+## What Changed in v45 (Performance-First 64-Bit Build + V48 Video Fix)?
 
 1. **Lightweight Default Frontend (`Andr36oidLauncher`):**
    * Replaced heavy Daijishō (`110–160 MB` RAM) with the pre-profiled, AOT-compiled **Andr36oid Launcher** (`~28–40 MB` RAM) as the default home activity.
@@ -68,23 +74,23 @@ An experimental, performance-first community fork of Andr36oid for the **Anberni
 
 ---
 
-## SHA-256 Checksums (v45)
+## SHA-256 Checksums (v45 + Upstream V48 Video Fix)
 
 Compressed image (`RG34XXSP-Andr36oid-Android11-v45-perf-complete.img.gz`):
 ```text
-601f2fe5ffdca168347df45941af520fa69aafd65ad685dff5c9306af49eccc7
+55ec71e6f7ec92c9f869796f77f0bd800f290a41cc887676c6049f01daa890d8
 ```
 
 Uncompressed image (`RG34XXSP-Andr36oid-Android11-v45-perf-complete.img`):
 ```text
-c6b07602b9af30911b285242984ea886fe46df5286089faa03f09cffc3fb2535
+9f7e4c086876018f1493ffd0d1fce3c2fc7234fa39495851a498dbfaae584588
 ```
 
 Individual partitions (`releases/v45-perf-partitions/`):
 ```text
-57ec6e4cc00c1fbc33a1bd59b91cfd4daf0198998968ab2da04481758b1b753a  RG34XXSP-v45-system.img
-d5ec5301b788e583fe2b53bf7bedc3b59d1b7d66e1ca94510e31e0e123d419ac  RG34XXSP-v45-vendor.img
-6d84cd5708723587406838e934b5f1b3fc58fab7489c235b5a3e1bb3959191a6  RG34XXSP-v45-product.img
+8d1e6032368126353f07bbbfce9dbed1e4b74428f900800fd2a40167b8d4af49  RG34XXSP-v45-system.img
+f1ace680605db47ed1f451ae191fbe26417c100e6f72dbb306b0dc024ead7056  RG34XXSP-v45-vendor.img
+229e5a4bf274e422bed9dec5ecfdf328426b13cf1d3bfce68b937a3f4ee8709b  RG34XXSP-v45-product.img
 ```
 
 ---

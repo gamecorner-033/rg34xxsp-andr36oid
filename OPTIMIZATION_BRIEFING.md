@@ -246,11 +246,11 @@ All recommended optimizations (`Andr36oidLauncher` default frontend, 64-bit-only
 
 | Output Artifact | Size | SHA-256 Checksum | Verification |
 | :--- | :--- | :--- | :--- |
-| `releases/RG34XXSP-Andr36oid-Android11-v45-perf-complete.img.gz` | `892.02 MiB` (`-147.2 MiB` vs v43) | `601f2fe5ffdca168347df45941af520fa69aafd65ad685dff5c9306af49eccc7` | GPT CRC32 + GZIP + Hardware Boot verified (`1,364 MB` free RAM at idle) |
-| `releases/RG34XXSP-Andr36oid-Android11-v45-perf-complete.img` | `11.27 GiB` (`12,101,615,616 B`) | `c6b07602b9af30911b285242984ea886fe46df5286089faa03f09cffc3fb2535` | Primary & Backup GPT verified |
-| `releases/v45-perf-partitions/RG34XXSP-v45-system.img` | `2048 MiB` (`516 MiB` free, `72%` used) | `57ec6e4cc00c1fbc33a1bd59b91cfd4daf0198998968ab2da04481758b1b753a` | `e2fsck -f -n` + SELinux verified |
-| `releases/v45-perf-partitions/RG34XXSP-v45-vendor.img` | `512 MiB` (`349 MiB` free, `31%` used) | `d5ec5301b788e583fe2b53bf7bedc3b59d1b7d66e1ca94510e31e0e123d419ac` | `e2fsck -f -n` + `sh -n` + XML + Hardware Boot verified |
-| `releases/v45-perf-partitions/RG34XXSP-v45-product.img` | `512 MiB` (`176 MiB` free, `62%` used) | `6d84cd5708723587406838e934b5f1b3fc58fab7489c235b5a3e1bb3959191a6` | `e2fsck -f -n` + SELinux verified |
+| `releases/RG34XXSP-Andr36oid-Android11-v45-perf-complete.img.gz` | `892.02 MiB` (`-147.2 MiB` vs v43) | `55ec71e6f7ec92c9f869796f77f0bd800f290a41cc887676c6049f01daa890d8` | GPT CRC32 + GZIP + V48 video fix merged (`1,364 MB` free RAM at idle) |
+| `releases/RG34XXSP-Andr36oid-Android11-v45-perf-complete.img` | `11.27 GiB` (`12,101,615,616 B`) | `9f7e4c086876018f1493ffd0d1fce3c2fc7234fa39495851a498dbfaae584588` | Primary & Backup GPT verified |
+| `releases/v45-perf-partitions/RG34XXSP-v45-system.img` | `2048 MiB` (`516 MiB` free, `72%` used) | `8d1e6032368126353f07bbbfce9dbed1e4b74428f900800fd2a40167b8d4af49` | `e2fsck -f -n` + SELinux verified |
+| `releases/v45-perf-partitions/RG34XXSP-v45-vendor.img` | `512 MiB` (`349 MiB` free, `31%` used) | `f1ace680605db47ed1f451ae191fbe26417c100e6f72dbb306b0dc024ead7056` | `e2fsck -f -n` + `sh -n` + V48 `rg34xx-hidl-memory` + `keymint` fix verified |
+| `releases/v45-perf-partitions/RG34XXSP-v45-product.img` | `512 MiB` (`176 MiB` free, `62%` used) | `229e5a4bf274e422bed9dec5ecfdf328426b13cf1d3bfce68b937a3f4ee8709b` | `e2fsck -f -n` + SELinux verified |
 
 ### Build & Verification Scripts
 * [build_v45_partitions.sh](scripts/build_v45_partitions.sh)

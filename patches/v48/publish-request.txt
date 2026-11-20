@@ -1,0 +1,2 @@
+Publish the experimental V48 general video-playback patch for the V43 base.
+Manual hardware playback confirmed; new automatic startup awaits a boot test.

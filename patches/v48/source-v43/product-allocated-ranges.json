@@ -1,0 +1,62 @@
+[
+  {
+    "offset": 0,
+    "length": 9039872,
+    "sha256": "b876442a4c94ef2a212f6b1e0ec2c144ac6b2697389f0f56e2bb7cd96d471067"
+  },
+  {
+    "offset": 134217728,
+    "length": 471040,
+    "sha256": "abacefe76459ccc13e67dfc954511fb50efd550c2bea3e38ace5538a53401df2"
+  },
+  {
+    "offset": 134692864,
+    "length": 1552384,
+    "sha256": "caf8c7afaa10867dfeb08a2bc0265157a72dd7f215eb3dd203a6b7ad57b93b7d"
+  },
+  {
+    "offset": 136314880,
+    "length": 1150976,
+    "sha256": "974303abe8b217597edebbec2554d62e6d2ff39d53128fd4127d8bfeb6bfd790"
+  },
+  {
+    "offset": 138416128,
+    "length": 458752,
+    "sha256": "e2c1e885f0f2988d01ebfbf7bf96be96959caeb3bc480f6265146e87c19fdbaa"
+  },
+  {
+    "offset": 140509184,
+    "length": 2043904,
+    "sha256": "2955c206142164e42497258cf27949a1ec50e69caca46ef987f551cf95e8fabb"
+  },
+  {
+    "offset": 142606336,
+    "length": 262103040,
+    "sha256": "8713eb47f2143428bbe1f6b092d0da142de3da2aa898738bc2ad2e0afbb9895d"
+  },
+  {
+    "offset": 404750336,
+    "length": 901120,
+    "sha256": "06d7e7396300850b743781e7a4f6227ac62c14333a4b720df66c5441dc8622d1"
+  },
+  {
+    "offset": 406847488,
+    "length": 33509376,
+    "sha256": "6384a41fe8eec05d42c9384c5fbc5c962b56b9497bc59dbd1ec20707c1af9b26"
+  },
+  {
+    "offset": 440401920,
+    "length": 569344,
+    "sha256": "4004e5b2d70611cee8591cd718d9f2ab6751a1d0aad8af7f3f6e05b2ab7c7ba7"
+  },
+  {
+    "offset": 442499072,
+    "length": 8093696,
+    "sha256": "112298ef4e04d1158cf150664ccad2d9989c1b9859f0c60f622e9327a4eeabf1"
+  },
+  {
+    "offset": 450625536,
+    "length": 1110016,
+    "sha256": "65d09730cc1031e92d9009bc2809ed21ac0fc4c8c55171b53318a7f3129fab05"
+  }
+]
