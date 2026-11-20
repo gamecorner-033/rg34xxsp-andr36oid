@@ -1,0 +1,31 @@
+name: Build and publish V48 video patch
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['patches/v48/publish-request.txt']
+permissions:
+  contents: write
+concurrency:
+  group: v48-video-patch-release
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Build verified V43-compatible vendor patch
+        run: sudo python3 patches/v48/build_release.py
+      - name: Validate Windows updater safeguards
+        shell: pwsh
+        run: ./patches/v48/test_updater_v48.ps1
+      - name: Publish experimental patch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create v48-video-patch \
+            patches/v48/RG34XXSP-v48-video-playback-fix-after-v43.zip \
+            patches/v48/RG34XXSP-v48-video-playback-fix-after-v43.zip.sha256 \
+            --title 'V48 experimental: general video playback fix' \
+            --notes-file patches/v48/RELEASE.md --prerelease --target "$GITHUB_SHA"
