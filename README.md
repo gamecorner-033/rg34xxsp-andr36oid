@@ -1,97 +1,73 @@
-# Andr36oid Android 11 for Anbernic RG34XX SP — v45 Performance-First 64-Bit Edition
+# RG34XX SP Andr36oid — Performance-First 64-Bit Edition
 
-An experimental, performance-first community fork of Andr36oid for the **Anbernic RG34XX SP (Allwinner H700)**, paired with the lightweight **Andr36oid Launcher** (`SproutLauncher` fork) as the default home frontend and configured for a **64-bit-only (`zygote64`)** runtime.
+A performance-first community fork of **Andr36oid (Android 11 / LineageOS 18.1)** tuned specifically for the **Anbernic RG34XX SP** (Allwinner H700 quad-core Cortex-A53, Mali-G31 MP2, 2 GB RAM, 640×480 4:3 clamshell).
 
----
-
-## Build Artifacts (Local Workspace)
-
-* **Complete Flashable Image (`.img.gz`):** `releases/RG34XXSP-Andr36oid-Android11-v45-perf-complete.img.gz` (`892.02 MiB`)
-* **Complete Uncompressed Image (`.img`):** `releases/RG34XXSP-Andr36oid-Android11-v45-perf-complete.img` (`11.27 GiB`)
-* **In-Place Card Updater (`v43`/`v44` $\rightarrow$ `v45`):** `releases/v45-perf-partitions/UPDATE-CARD-V45.cmd` ([Update-Card-v45.ps1](scripts/card-updaters/Update-Card-v45.ps1))
-* **Checksums:** [RG34XXSP-v45-SHA256SUMS.txt](scripts/card-updaters/RG34XXSP-v45-SHA256SUMS.txt)
-* **Technical Briefing:** [OPTIMIZATION_BRIEFING.md](OPTIMIZATION_BRIEFING.md)
-* **RetroArch RG34XX SP Controls Config:** [ANBERNIC-keys.cfg](configs/retroarch/ANBERNIC-keys.cfg) & [retroarch.cfg](configs/retroarch/retroarch.cfg)
-* **microG On-Demand Installer & Toggle:** [Install-And-Toggle-microG.ps1](scripts/microg/Install-And-Toggle-microG.ps1)
+This fork strips out unused R36S/Rockchip components, `userdebug` profiling overhead, heavy launcher bloat, and broken donor HALs while adding hardware-specific power management, kernel storage optimizations, working hardware video decoding, and RG34XX SP controller profiles—leaving **~1.36 GB (`68.9%`) of RAM available at idle** for emulators, streaming, and native Android apps.
 
 ---
 
-## Hardware Video Decoding Fix (Merged from Upstream V48)
+## Key Capabilities & Optimizations
 
-This build merges the upstream **[V48 video-playback fix](https://github.com/icameronrb/RG34XXSP-Andr36oid/releases/tag/v48-video-patch)** directly into the v45 `vendor` partition (`init.sun50iw9p1.rc`), automatically starting the framework `android.hidl.allocator@1.0::IAllocator/ashmem` (`rg34xx-hidl-memory`) service with its intended `u:r:hal_allocator_default:s0` SELinux domain and HIDL interface registration. This resolves hardware `OMX.allwinner.video.decoder.avc` / `Codec2` buffer allocation hangs across video apps (Moonlight, YouTube, VLC, etc.) without forcing software decoding.
+### Memory & Runtime Efficiency
+* **Pure 64-Bit Runtime (`zygote64`):** Boots a single 64-bit Zygote (`arm64-v8a`) instead of dual 64/32-bit Zygotes, permanently reclaiming ~45–60 MB of RAM and speeding up cold boot.
+* **Lightweight Default Frontend:** Uses the pre-profiled, AOT-compiled **Andr36oid Launcher** (`~28–40 MB` RSS) as the default home screen so the launcher stays resident in memory during heavy emulation instead of reloading on exit.
+* **Cortex-A53 Compiler Targets:** Configures Bionic and Dalvik/ART (`dex2oat` / JIT) for `cortex-a53` instruction scheduling instead of `generic`.
+* **Lean System Footprint:** Removes unused R36S/Rockchip hardware utilities, `SettingsIntelligence`, SurfaceFlinger background blur, Power Menu graph polling, `userdebug` tracing/profiling daemons, crashing donor HALs (`camera.provider`, `vendor.keymint-default`, `rild`), and 78 unused `/product/overlay` theme APKs—while preserving lazy-loaded `ThoriumWebView` (`0 MB` idle RAM), `PerfOverlay`, `GameComfort`, `GamepadKeyboard`, `JoyMouseSettings`, and `ControllerTester`.
 
-*Note: Upstream's standalone `patches/v48/` updater (`RG34XXSP-v48-video-playback-fix-after-v43.zip`) is included in this repository for stock **v43** cards only and rejects v44/v45 builds. Users on this v45 performance fork should use `scripts/card-updaters/UPDATE-VENDOR-ONLY.cmd` or `UPDATE-CARD-V45.cmd`.*
+### Storage, Kernel & Scheduler Tuning
+* **Kernel `sdcardfs` Storage Path:** Routes internal and external storage directly through the kernel's built-in `sdcardfs` instead of userspace FUSE (`MediaProvider`) for lower latency on ROM loads and save states.
+* **MicroSD & VM Tuning:** Disables Transparent Huge Pages (`never`), disables `sched_schedstats` profiling, tunes dirty-page writeback ratios, and optimizes TF1/TF2 (`mmcblk0`/`mmcblk1`) I/O queues (`read_ahead_kb = 512`, `iostats = 0`, `add_random = 0`).
+* **CPU Governor & Cpuset Partitioning:** Uses a boot-time `performance` boost handing off to fast-ramping `schedutil` on `sys.boot_completed`, isolates background tasks to low-impact cores, and runs post-boot idle broadcast receiver trimming alongside adaptive RAM profiling.
 
-## What Changed in v45 (Performance-First 64-Bit Build + V48 Video Fix)?
+### Hardware Video Decoding
+* **Framework `IAllocator/ashmem` Support:** Automatically starts `/system/bin/hw/android.hidl.allocator@1.0-service` (`rg34xx-hidl-memory`) with its `hal_allocator_default` SELinux domain and HIDL interface registration, allowing the Allwinner `OMX.allwinner.video.decoder.avc` hardware decoder and `Codec2` to allocate video buffers cleanly for **Moonlight**, **YouTube**, and media players without forcing software decoding.
 
-1. **Lightweight Default Frontend (`Andr36oidLauncher`):**
-   * Replaced heavy Daijishō (`110–160 MB` RAM) with the pre-profiled, AOT-compiled **Andr36oid Launcher** (`~28–40 MB` RAM) as the default home activity.
-   * Removed duplicate APK copies from `/vendor/etc/rg34xx/` and stripped `Daijishou` from `/system/app/`.
-2. **64-Bit-Only Zygote (`ro.zygote=zygote64`):**
-   * Configured `/system/etc/init/hw/init.zygote64.rc`, `/system/build.prop`, and `/vendor/build.prop` for single-Zygote 64-bit operation (`arm64-v8a`), reclaiming **45–60 MB of permanent RAM** previously held by `zygote_secondary` (`app_process32`).
-3. **Ultra-Low-Power Clamshell Lid Sleep Manager (`rg34xx-lid-sleep.sh` — Option 1):**
-   * Listens exclusively on the AXP2202 PMIC input device (`axp2202-pek`, `0%` CPU during gameplay) for Hall-sensor lid-close (`KEY_INSERT` / `0x006e`) and lid-open (`KEY_DELETE` / `0x006f`).
-   * **On Lid Close:** Clamps CPU max frequency to `480 MHz` on `cpu0`, saves active Wi-Fi/Bluetooth states and brings `wlan0` down (powering down the `axp2202-cldo4` 3.3V Wi-Fi rail to eliminate the `25–45 mA` standby drain), and immediately forces Android into **Deep Doze** (`cmd deviceidle force-idle deep`) so the H700 enters hardware **ARM PSCI `universal-standby` (`mem`)** with DRAM in self-refresh.
-   * **On Lid Open:** Synchronously restores full `1512 MHz` CPU clocks and all 4 cores (`0-3`) in `<2ms` via direct sysfs writes for instant wake, then asynchronously exits Deep Doze and restores your prior Wi-Fi/Bluetooth state.
-4. **Cortex-A53 Compiler & Bionic Tuning:**
-   * Updated Bionic and Dalvik/ART instruction set targets in `/vendor/build.prop` from `generic` to `cortex-a53` (`ro.bionic.cpu_variant=cortex-a53`, `dalvik.vm.isa.arm64.variant=cortex-a53`).
-4. **Kernel `sdcardfs` Enabled (Bypassing Userspace FUSE):**
-   * Restored `setprop persist.sys.fuse false` and `setprop persist.sys.fflag.override.settings_fuse false` in `/vendor/etc/init/hw/init.sun50iw9p1.rc` so ROM reads and emulator saves go directly through the kernel's built-in `sdcardfs` instead of bouncing through the Java `MediaProvider` FUSE daemon.
-5. **Removed Boot-Time Input Sniffing & Diagnostic Polling Loops:**
-   * Removed `rg34xx-power-usb-report` (which ran `getevent -lt` for the first 300 seconds of every boot piping every button/stick input through a shell loop, plus a 24×10s `dumpsys` loop) and `rg34xx-cpu-report`.
-   * Added a `<5ms` fast-path exit to `rg34xx-owner-setup.sh` on subsequent boots and trimmed `rg34xx-hardware-v27.sh` to load `8821cs.ko` and exit cleanly without `dmesg`/`dumpsys` diagnostic dumps.
-6. **VM, THP, CPU Governor, Cpuset & MicroSD I/O Queue Tuning:**
-   * Disabled Transparent Huge Pages (`transparent_hugepage/enabled = never`) and tuned `min_free_kbytes = 8192`, `dirty_background_ratio = 5`, `dirty_ratio = 15`.
-   * Added boot-time `performance` governor boost with automatic handoff to `schedutil` (`up_rate_limit_us = 1000`, `down_rate_limit_us = 10000`) on `sys.boot_completed=1`.
-   * Disabled `iostats`, `add_random`, and `rotational` on `mmcblk0` (TF1) and `mmcblk1` (TF2) with `read_ahead_kb = 512`.
-   * Added post-boot idle broadcast receiver trimming (`rg34xx-boot-trim.sh`) and included the v44 adaptive RAM profiler (`rg34xx-ram-profile.sh`).
-7. **Service, HAL, Permission & APK Debloat:**
-   * Disabled `userdebug` scheduler profiling (`sched_schedstats = 0`) and stripped 21 `userdebug`/unused init `.rc` services (`incidentd`, `perfetto`, `traced_perf`, `heapprofd`, `iorapd`, `atrace`, `bootstat`, `dumpstate`, `racoon`, `mdnsd`, `gsid`, etc.).
-   * Disabled redundant vendor HALs (`vendor.keymint-default`, `vendor.rebootescrow-default`, `boringssl_self_test`), cleaned dead HAL entries (`camera.provider`, `tv.cec`) from `/vendor/etc/vintf/manifest.xml`, moved 14 unused donor feature XMLs out of `/vendor/etc/permissions/`, and added `gameconsole_unavailable_features.xml`.
-   * Removed `SettingsIntelligence`, 19 R36S/Rockchip-specific hardware/utility apps, and all 78 `/product/overlay` RRO theme APKs while preserving `ThoriumWebView` (lazy-loaded, `0 MB` idle RAM), `PerfOverlay`, `GameComfort`, `GamepadKeyboard`, `JoyMouseSettings`, and `ControllerTester`.
+### Clamshell Power & Sleep Management
+* **Event-Driven Hall-Sensor Lid Sleep (`rg34xx-lid-sleep.sh`):** Monitors the AXP2202 PMIC input device (`axp2202-pek`) at `0%` gameplay CPU overhead. Closing the lid clamps CPU clocks to `480 MHz` on `cpu0`, powers down active Wi-Fi/Bluetooth radios (saving their prior state), and forces Deep Doze; opening the lid synchronously restores full `1512 MHz` clocks across all four cores in `<2 ms` before asynchronously restoring radios.
+* **Reliable Wake on H700:** Holds a lightweight kernel partial wake lock (`rg34xx_no_mem_suspend`) so screen timeouts and lid closures turn off the panel, backlight, and radios without entering un-wakeable H700 `mem` suspend states.
+
+### Handheld Controls & Companion Tooling
+* **RG34XX SP RetroArch Controls (`configs/retroarch/`):** Pre-configured `ANBERNIC-keys.cfg` and `retroarch.cfg` mapping the RG34XX SP's hardware HAT D-pad (`h0up`/`h0down`/`h0left`/`h0right`), face/shoulder buttons, analog sticks, and ArkOS-style hotkeys out of the box.
+* **Wireless Debugging Ready:** Enables ADB over TCP (`5555`) across reboots for cable-free ROM transfers and APK management.
+* **Optional On-Demand `microG`:** Includes a helper script (`scripts/microg/`) to install and toggle lightweight `microG` Google Services on or off (`0 MB` RAM when disabled).
 
 ---
 
-## Installation
+## Download & Installation
 
-### Option 1: Fresh MicroSD Flash (Complete Image)
-1. Back up the selected microSD card (**flashing erases the card**). Use a reliable 32GB or larger card.
-2. Flash `releases/RG34XXSP-Andr36oid-Android11-v45-perf-complete.img.gz` using [balenaEtcher](https://etcher.balena.io/) or Rufus.
-3. Insert the card into the handheld's **TF1** slot and boot. Allow first-boot storage expansion to complete.
+Pre-built flashable images and SHA-256 checksums are published on **[GitHub Releases](https://github.com/gamecorner-033/rg34xxsp-andr36oid/releases/latest)**.
 
-### Option 2: In-Place Upgrade of an Existing v43 / v44 Card
-1. Power off the handheld and insert your existing v43/v44 microSD card into a Windows PC reader.
-2. Right-click `releases/v45-perf-partitions/UPDATE-CARD-V45.cmd` and select **Run as administrator**.
-3. The updater verifies the card layout and `boot` partition, writes and read-back verifies the v45 `system`, `vendor`, and `product` partitions, and preserves your existing `userdata` (`/data`) partition.
+### Option 1: Fresh MicroSD Flash (Recommended)
+1. Back up your microSD card (**flashing erases all data**). Use a reliable 32 GB or larger card.
+2. Download the latest complete `.img.gz` release from **[GitHub Releases](https://github.com/gamecorner-033/rg34xxsp-andr36oid/releases/latest)** and verify its SHA-256 checksum.
+3. Flash the `.img.gz` directly using [balenaEtcher](https://etcher.balena.io/) or [Rufus](https://rufus.ie/).
+4. Insert the card into the handheld's **TF1** slot and boot. Allow first-boot storage expansion to finish before powering off.
+
+### Option 2: In-Place Partition Update (Windows, Preserves User Data)
+1. Power off the handheld and insert the existing RG34XX SP Android microSD card into a Windows PC reader.
+2. Place the matching partition images alongside the updater scripts in [`scripts/card-updaters/`](scripts/card-updaters/).
+3. Right-click `UPDATE-CARD-V45.cmd` (full `system` + `vendor` + `product` update) or `UPDATE-VENDOR-ONLY.cmd` (fast `vendor`-only patch) and select **Run as administrator**.
+4. Wait for read-back SHA-256 verification to report `SUCCESS`, safely eject the card, and boot.
 
 ---
 
 ## Controls
 
-* **Menu (M):** Home (short press), `M + B` App Switcher.
-* **Menu + X:** Toggle joystick mouse/cursor mode (right stick moves pointer, left stick scrolls, A or R1 left-clicks).
+* **Menu (`M`):** Short press = Home; `M + B` = App Switcher.
+* **Menu + `X`:** Toggle **JoyMouse** virtual cursor (right stick moves pointer, left stick scrolls, `A` or `R1` left-clicks).
 * **Long-Press Power:** Power / Global Actions menu.
+* **RetroArch Hotkeys (with bundled config):** Hold `Select` + `Start` (twice) to quit, `Select + X` (or `L1 + R1 + Start + Select`) for Quick Menu, `Select + R1 / L1` to save/load state, `Select + Up / Down` to change slot.
 
 ---
 
-## SHA-256 Checksums (v45 + Upstream V48 Video Fix)
+## Repository Layout
 
-Compressed image (`RG34XXSP-Andr36oid-Android11-v45-perf-complete.img.gz`):
-```text
-55ec71e6f7ec92c9f869796f77f0bd800f290a41cc887676c6049f01daa890d8
-```
-
-Uncompressed image (`RG34XXSP-Andr36oid-Android11-v45-perf-complete.img`):
-```text
-9f7e4c086876018f1493ffd0d1fce3c2fc7234fa39495851a498dbfaae584588
-```
-
-Individual partitions (`releases/v45-perf-partitions/`):
-```text
-8d1e6032368126353f07bbbfce9dbed1e4b74428f900800fd2a40167b8d4af49  RG34XXSP-v45-system.img
-f1ace680605db47ed1f451ae191fbe26417c100e6f72dbb306b0dc024ead7056  RG34XXSP-v45-vendor.img
-229e5a4bf274e422bed9dec5ecfdf328426b13cf1d3bfce68b937a3f4ee8709b  RG34XXSP-v45-product.img
-```
+* [`scripts/`](scripts/) — Reproducible Linux/WSL partition build, verification, image assembly, and compression pipeline.
+* [`scripts/card-updaters/`](scripts/card-updaters/) — SHA-256-verified in-place Windows SD card updaters, partition manifest, and checksums.
+* [`scripts/microg/`](scripts/microg/) — Optional `microG` installer and on-demand enable/disable toggle scripts.
+* [`configs/retroarch/`](configs/retroarch/) — RG34XX SP `ANBERNIC-keys` autoconfig and `retroarch.cfg`.
+* [`OPTIMIZATION_BRIEFING.md`](OPTIMIZATION_BRIEFING.md) — Full architectural audit, telemetry notes, and optimization breakdown.
+* [`patches/`](patches/) — Upstream standalone patch tooling preserved for compatibility with stock base cards.
 
 ---
 
@@ -101,7 +77,7 @@ This is unofficial, experimental firmware provided as-is without warranty. Charg
 
 ## Credits and Upstream Sources
 
-* **[Andr36oid](https://github.com/andr36oid)** — R36S Android 11 base, Andr36oid Launcher, joyMouse, and handheld framework features (**itskenny0, turtleletortue, sonic011gamer, notime2d8**, and contributors).
-* **[icameronrb/RG34XXSP-Andr36oid](https://github.com/icameronrb/RG34XXSP-Andr36oid)** — RG34XX SP (H700) v43/v44 port adaptation, display adapter, storage resizer, and hardware bring-up.
-* **[well83](https://github.com/well83)** — T95 H616 Android 12 donor components.
+* **[Andr36oid](https://github.com/andr36oid)** — Android 11 handheld base, Andr36oid Launcher, joyMouse, and controller/emulator framework (**itskenny0, turtleletortue, sonic011gamer, notime2d8**, and contributors).
+* **[icameronrb/RG34XXSP-Andr36oid](https://github.com/icameronrb/RG34XXSP-Andr36oid)** — Upstream RG34XX SP (H700) port, display adapter, storage resizer, hardware bring-up, and video allocator fix.
+* **[well83](https://github.com/well83)** — Allwinner H616/H700 Android donor components.
 * **[Anbernic](https://anbernic.com/)**, **AOSP**, **LineageOS**, **Linux**, **Allwinner**, **Arm**, and **Realtek**.
