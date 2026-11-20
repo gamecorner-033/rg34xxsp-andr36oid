@@ -10,6 +10,12 @@ I have flashed and booted this build on my own RG34XX SP with the **v2 LCD panel
 
 The [earlier OneDrive sharing link](https://1drv.ms/u/c/74a5f0ffe2189a45/IQBpgC47xe8WQZ0QPKg9RvJmAUaSGnKH0G0z7gTYO-0aOhQ?e=5cU8wj) was used for the previous build. Use the GitHub v43 release for this version.
 
+## Experimental video-playback patch (V48)
+
+[Download the V48 video-playback patch and installation instructions](https://github.com/icameronrb/RG34XXSP-Andr36oid/releases/tag/v48-video-patch). This is a vendor-only patch for the original **V43 complete image**, not a complete firmware image. It stops on V44–V47 vendor test builds.
+
+Video playback failures were reported across apps. Diagnosis in YouTube for Android TV found a missing shared-memory allocator service blocking the Allwinner hardware decoder. Starting that service restored smooth 720p AVC playback, including pause/resume and seeking; the patch makes startup automatic without forcing software decoding. **Automatic startup on the new patch still needs a hardware boot test**, and other codecs/players have not all been tested. It remains experimental. The separate intermittent USB resume/MTP issue is not fixed by this patch.
+
 ## What works on the tested handheld
 
 - Display and graphics on the v2 panel; audio.
